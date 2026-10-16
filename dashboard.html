@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SourceTrace Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body class="dashboard-body">
+    <header class="topbar">
+      <div class="brand-block" aria-label="SourceTrace brand and description">
+        <img class="brand-mark" src="icons/icon48.png" alt="SourceTrace logo" />
+        <div>
+          <h1>SourceTrace</h1>
+          <p>Research workspace · local only</p>
+        </div>
+      </div>
+      <div class="header-stats">
+        <span class="label">Total saved sources</span>
+        <strong id="totalSources">0</strong>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <nav class="view-tabs" role="tablist" aria-label="Research workspace">
+        <button
+          class="view-tab active"
+          id="tab-library"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="view-library"
+          data-view="library"
+        >
+          Source Library
+        </button>
+        <button
+          class="view-tab"
+          id="tab-compare"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-compare"
+          data-view="compare"
+        >
+          Compare Sources
+        </button>
+        <button
+          class="view-tab"
+          id="tab-phrase"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-phrase"
+          data-view="phrase"
+        >
+          Phrase Search
+        </button>
+        <button
+          class="view-tab"
+          id="tab-map"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-map"
+          data-view="map"
+        >
+          Relationship Map
+        </button>
+        <button
+          class="view-tab"
+          id="tab-reports"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-reports"
+          data-view="reports"
+        >
+          Research Reports
+        </button>
+        <button
+          class="view-tab"
+          id="tab-claims"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-claims"
+          data-view="claims"
+        >
+          Claims &amp; Evidence
+        </button>
+      </nav>
+
+      <div
+        id="workspaceStatus"
+        class="status-box info-box"
+        role="status"
+        aria-live="polite"
+      >
+        Select sources in the library to compare or include them in a report.
+      </div>
+
+      <section
+        class="view-panel active"
+        id="view-library"
+        role="tabpanel"
+        aria-labelledby="tab-library"
+      >
+        <div class="panel library-panel">
+          <section class="pdf-import-panel" aria-labelledby="pdfImportHeading">
+            <div>
+              <h2 id="pdfImportHeading">Import academic PDFs</h2>
+              <p class="subtle-text">PDFs are processed locally. SourceTrace stores extracted text and metadata—not the original file.</p>
+            </div>
+            <label class="pdf-file-picker" for="pdfFilesInput">
+              <span>Select one or more PDF files</span>
+              <input id="pdfFilesInput" type="file" accept=".pdf,application/pdf" multiple />
+            </label>
+            <ul id="pdfQueue" class="pdf-queue" aria-live="polite"></ul>
+            <div class="pdf-import-actions">
+              <button id="importPdfsBtn" class="primary-btn" type="button" disabled>Import selected PDFs</button>
+              <button id="cancelPdfImportBtn" class="secondary-btn hidden" type="button">Cancel extraction</button>
+              <button id="clearPdfQueueBtn" class="ghost-btn" type="button">Clear selection</button>
+            </div>
+            <div id="pdfImportStatus" class="status-box info-box" role="status" aria-live="polite">PDF files remain on your device; only extracted text and metadata are saved locally.</div>
+          </section>
+          <div class="toolbar">
+            <label class="search-box" for="sourceSearch">
+              <span>Search your saved sources</span>
+              <input
+                id="sourceSearch"
+                type="search"
+                placeholder="Search by title, hostname, URL, text, or notes"
+                autocomplete="off"
+              />
+            </label>
+          </div>
+          <div class="action-row">
+            <button id="selectAllBtn" class="secondary-btn" type="button">
+              Select visible (up to 10)
+            </button>
+            <button id="clearSelectionBtn" class="secondary-btn" type="button">
+              Clear selection
+            </button>
+            <span id="selectedCount" class="selection-count">0 selected</span>
+          </div>
+          <div id="loadingState" class="status-box hidden">
+            Loading your research library…
+          </div>
+          <div id="sourceList" class="source-list" aria-live="polite"></div>
+          <div id="emptyState" class="empty-state hidden">
+            <h2>No sources saved yet</h2>
+            <p>
+              Save a webpage from the popup to start building your research
+              library.
+            </p>
+          </div>
+        </div>
+        <div class="panel timeline-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Source timeline</h2>
+              <p>
+                Saved dates are shown separately from known publication dates.
+              </p>
+            </div>
+          </div>
+          <ol id="sourceTimeline" class="timeline-list"></ol>
+        </div>
+      </section>
+
+      <section
+        class="view-panel"
+        id="view-compare"
+        role="tabpanel"
+        aria-labelledby="tab-compare"
+        hidden
+      >
+        <div class="panel comparison-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Multi-source comparison</h2>
+              <p>
+                Compare each unique pair from your current library selection.
+              </p>
+            </div>
+            <button id="compareBtn" class="primary-btn" type="button">
+              Compare selected
+            </button>
+          </div>
+          <div id="comparisonStatus" class="status-box info-box">
+            Select between 2 and 10 sources in the Source Library.
+          </div>
+          <div id="comparisonResults" class="comparison-results"></div>
+          <div id="pairDetail" class="pair-detail hidden"></div>
+        </div>
+      </section>
+
+      <section
+        class="view-panel"
+        id="view-phrase"
+        role="tabpanel"
+        aria-labelledby="tab-phrase"
+        hidden
+      >
+        <div class="panel feature-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Distinctive phrase search</h2>
+              <p>
+                Find exact text in saved article contents. Matches do not
+                establish copying or source direction.
+              </p>
+            </div>
+          </div>
+          <div class="phrase-controls">
+            <label class="search-box phrase-input" for="phraseSearchInput">
+              <span>Phrase to find</span>
+              <input
+                id="phraseSearchInput"
+                type="search"
+                maxlength="300"
+                placeholder="Enter a phrase to search your saved sources"
+                autocomplete="off"
+              />
+            </label>
+            <label class="check-option"
+              ><input id="wholeWordToggle" type="checkbox" /> Match whole
+              words</label
+            >
+          </div>
+          <div id="phraseSearchSummary" class="subtle-text" aria-live="polite">
+            Enter a phrase to search the saved library.
+          </div>
+          <div id="phraseSearchResults" class="feature-results"></div>
+        </div>
+      </section>
+
+      <section
+        class="view-panel"
+        id="view-map"
+        role="tabpanel"
+        aria-labelledby="tab-map"
+        hidden
+      >
+        <div class="panel feature-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Research relationship map</h2>
+              <p>
+                Connections show measured textual similarity only—not citation,
+                agreement, or causal relationships.
+              </p>
+            </div>
+          </div>
+          <div class="map-controls">
+            <label for="similarityThreshold"
+              >Minimum textual overlap:
+              <output id="thresholdValue" for="similarityThreshold"
+                >15%</output
+              ></label
+            >
+            <input
+              id="similarityThreshold"
+              type="range"
+              min="0"
+              max="100"
+              value="15"
+              step="1"
+            />
+            <label class="select-label" for="mapSourceLimit"
+              >Sources to display</label
+            >
+            <select id="mapSourceLimit">
+              <option value="24">Up to 24 sources</option>
+              <option value="12">Up to 12 sources</option>
+              <option value="8">Up to 8 sources</option>
+              <option value="selected">Selected sources (2–10)</option>
+            </select>
+          </div>
+          <div class="map-legend">
+            <span><i class="legend-node"></i> Saved source</span
+            ><span
+              ><i class="legend-edge"></i> Similarity at or above
+              threshold</span
+            >
+          </div>
+          <div id="mapEmptyState" class="empty-compare">
+            Save sources to see measured relationships here.
+          </div>
+          <div class="map-scroll">
+            <svg
+              id="relationshipMap"
+              class="relationship-map"
+              role="img"
+              aria-label="Map of textual similarity between saved sources"
+            ></svg>
+          </div>
+          <div id="mapDetail" class="map-detail subtle-text" aria-live="polite">
+            Select a node or connection to inspect its details.
+          </div>
+          <div id="mapNotice" class="subtle-text"></div>
+        </div>
+      </section>
+
+      <section
+        class="view-panel"
+        id="view-reports"
+        role="tabpanel"
+        aria-labelledby="tab-reports"
+        hidden
+      >
+        <div class="panel feature-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Research report generator</h2>
+              <p>
+                Generate a standalone local HTML report from selected saved
+                sources and measured comparisons.
+              </p>
+            </div>
+          </div>
+          <p id="reportSelectionSummary" class="subtle-text">
+            Select 2–10 sources in Source Library to include pairwise
+            comparisons. One or more can be included in a source-only report.
+          </p>
+          <label class="check-option report-claims-option"
+            ><input id="includeClaimsToggle" type="checkbox" /> Include claims
+            and evidence labels associated with selected sources</label
+          >
+          <div class="action-row">
+            <button id="downloadReportBtn" class="primary-btn" type="button">
+              Download HTML Report
+            </button>
+            <button id="printReportBtn" class="secondary-btn" type="button">
+              Print / Save as PDF
+            </button>
+          </div>
+          <div id="reportStatus" class="status-box info-box" role="status">
+            Reports are generated locally and are not uploaded.
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="view-panel"
+        id="view-claims"
+        role="tabpanel"
+        aria-labelledby="tab-claims"
+        hidden
+      >
+        <div class="panel feature-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Claims and evidence</h2>
+              <p>
+                Evidence categories are your manual classifications, not
+                objective or automated truth assessments.
+              </p>
+            </div>
+          </div>
+          <form id="claimForm" class="claim-form">
+            <input id="claimIdInput" type="hidden" />
+            <label class="search-box" for="claimTitleInput"
+              ><span>Claim title</span
+              ><input
+                id="claimTitleInput"
+                type="text"
+                maxlength="200"
+                required
+                placeholder="A concise claim to investigate"
+            /></label>
+            <label class="search-box" for="claimNotesInput"
+              ><span>Research notes</span
+              ><textarea
+                id="claimNotesInput"
+                rows="3"
+                maxlength="5000"
+                placeholder="Your notes about this claim"
+              ></textarea>
+            </label>
+            <fieldset class="evidence-picker">
+              <legend>
+                Associate sources and record your manual classification
+              </legend>
+              <div id="claimSourcePicker" class="claim-source-picker"></div>
+            </fieldset>
+            <div class="action-row">
+              <button id="saveClaimBtn" class="primary-btn" type="submit">
+                Save claim</button
+              ><button
+                id="cancelClaimEditBtn"
+                class="secondary-btn"
+                type="button"
+              >
+                Clear form
+              </button>
+            </div>
+          </form>
+          <div class="claim-disclaimer subtle-text">
+            “Supports”, “Challenges”, “Context only”, and “Not yet reviewed” are
+            user-entered labels. SourceTrace does not infer whether a claim is
+            true.
+          </div>
+          <div id="claimsList" class="feature-results"></div>
+          <div id="claimsEmptyState" class="empty-state hidden">
+            <h2>No claims yet</h2>
+            <p>
+              Create a claim and associate sources to organize your research
+              evidence.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="publication-date.js"></script>
+    <script src="dashboard.js"></script>
+    <script type="module" src="pdf-import.js"></script>
+  </body>
+</html>

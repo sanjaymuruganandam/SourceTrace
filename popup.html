@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SourceTrace</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="popup-shell">
+    <header class="app-header">
+      <div class="brand-block" aria-label="SourceTrace logo and name">
+        <img class="brand-mark" src="icons/icon32.png" alt="SourceTrace logo" />
+        <div>
+          <h1>SourceTrace</h1>
+          <p>Discover where information comes from</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="popup-content">
+      <p class="subtitle">
+        Save a webpage, keep a local research library, and compare article overlap
+        without assuming plagiarism.
+      </p>
+
+      <button id="savePageBtn" class="primary-btn" type="button">
+        Save Current Page
+      </button>
+
+      <button id="openDashboardBtn" class="secondary-btn" type="button">
+        Open Research Dashboard
+      </button>
+
+      <div class="meta-row" aria-live="polite">
+        <span>Saved sources</span>
+        <strong id="sourceCount">0</strong>
+      </div>
+
+      <div id="statusMessage" class="status-message" role="status" aria-live="polite">
+        Ready to save your next source.
+      </div>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
